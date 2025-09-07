@@ -1,0 +1,2 @@
+streamlit
+snake-mip-solver
