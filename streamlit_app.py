@@ -30,7 +30,7 @@ def render_puzzle_editor():
     st.subheader("🎯 Puzzle Editor")
     
     # Grid size controls
-    col_1, col_2 = st.columns(2)
+    col_1, col_2, col_3 = st.columns([1, 1, 2])
     with col_1:
         new_rows = st.number_input(
             "Rows",
@@ -59,16 +59,17 @@ def render_puzzle_editor():
         st.session_state.puzzle_grid = [[False for _ in range(new_cols)] for _ in range(new_rows)]
         st.rerun()
 
-    col1, col2 = st.columns(2)
-    with col1: 
+    with col_3:
+        # col1, col2 = st.columns(2)
+        # with col1: 
         render_random_generation_options()
-    with col2: 
-        if st.button("🗑️ Clear Puzzle", type="secondary"):
-            st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)] 
-                                            for _ in range(st.session_state.num_rows)]
-            st.session_state.row_sums = [None] * st.session_state.num_rows
-            st.session_state.col_sums = [None] * st.session_state.num_cols
-            st.rerun()
+        # with col2: 
+        #     if st.button("🗑️ Clear Puzzle", type="secondary"):
+        #         st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)] 
+        #                                         for _ in range(st.session_state.num_rows)]
+        #         st.session_state.row_sums = [None] * st.session_state.num_rows
+        #         st.session_state.col_sums = [None] * st.session_state.num_cols
+        #         st.rerun()
 
     st.markdown("### 🎯 Constraint Grid")
     st.markdown("Set the number of filled cells required for each row and column. Check cells to mark start and end snake positions.")
@@ -159,6 +160,13 @@ def render_puzzle_editor():
         st.error(f"❌ {len(checked_cells)} cells selected. Please select exactly 2 cells for start and end positions.")
         st.session_state.start_cell = None
         st.session_state.end_cell = None
+
+    if st.button("🗑️ Clear Puzzle", type="secondary"):
+        st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)] 
+                                        for _ in range(st.session_state.num_rows)]
+        st.session_state.row_sums = [None] * st.session_state.num_rows
+        st.session_state.col_sums = [None] * st.session_state.num_cols
+        st.rerun()
     
     
 def create_and_solve_puzzle():
@@ -271,8 +279,7 @@ def generate_random_puzzle(fill_percentage=0.4, random_seed=None):
         
         # Success message with generation info
         seed_info = f" (seed: {random_seed})" if random_seed is not None else ""
-        st.success(f"✅ Random puzzle generated! Fill: {fill_percentage:.0%}{seed_info}")
-        st.rerun()
+        st.toast(f"✅ Random puzzle generated! Fill: {fill_percentage:.0%}{seed_info}")
         
     except Exception as e:
         st.error(f"Error generating puzzle: {str(e)}")
