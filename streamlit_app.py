@@ -28,39 +28,42 @@ def initialize_session_state():
 
 def render_puzzle_editor():
     """Render the interactive grid for puzzle creation."""
-    st.subheader("✏️ Puzzle Editor")
     
+    col_dimensions, col_generator = st.columns([1, 2])
+
     # Grid size controls
-    col_1, col_2, col_3 = st.columns([1, 1, 2])
-    with col_1:
-        new_rows = st.number_input(
-            "Rows",
-            min_value=3,
-            max_value=20,
-            value=st.session_state.num_rows,
-            key="new_num_rows"
-        )
+    with col_dimensions:
+        st.subheader("✏️ Puzzle Editor")
+        col_rows, col_columns = st.columns([1, 1])
+        with col_rows:
+            new_rows = st.number_input(
+                "Rows",
+                min_value=3,
+                max_value=20,
+                value=st.session_state.num_rows,
+                key="new_num_rows"
+            )
 
-    with col_2:
-        new_cols = st.number_input(
-            "Cols", 
-            min_value=3,
-            max_value=20,
-            value=st.session_state.num_cols,
-            key="new_num_cols"
-        )
-    
-    # Handle grid size changes
-    if new_rows != st.session_state.num_rows or new_cols != st.session_state.num_cols:
-        st.session_state.num_rows = new_rows
-        st.session_state.num_cols = new_cols
-        # Resize arrays
-        st.session_state.row_sums = [None] * new_rows
-        st.session_state.col_sums = [None] * new_cols
-        st.session_state.puzzle_grid = [[False for _ in range(new_cols)] for _ in range(new_rows)]
-        st.rerun()
+        with col_columns:
+            new_cols = st.number_input(
+                "Cols", 
+                min_value=3,
+                max_value=20,
+                value=st.session_state.num_cols,
+                key="new_num_cols"
+            )
+        
+        # Handle grid size changes
+        if new_rows != st.session_state.num_rows or new_cols != st.session_state.num_cols:
+            st.session_state.num_rows = new_rows
+            st.session_state.num_cols = new_cols
+            # Resize arrays
+            st.session_state.row_sums = [None] * new_rows
+            st.session_state.col_sums = [None] * new_cols
+            st.session_state.puzzle_grid = [[False for _ in range(new_cols)] for _ in range(new_rows)]
+            st.rerun()
 
-    with col_3:
+    with col_generator:
         render_random_generation_options()
 
     st.markdown("### 📊 Constraint Grid")
