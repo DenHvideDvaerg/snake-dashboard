@@ -28,7 +28,7 @@ def initialize_session_state():
 
 def render_puzzle_editor():
     """Render the interactive grid for puzzle creation."""
-    st.subheader("🎯 Puzzle Editor")
+    st.subheader("✏️ Puzzle Editor")
     
     # Grid size controls
     col_1, col_2, col_3 = st.columns([1, 1, 2])
@@ -63,7 +63,7 @@ def render_puzzle_editor():
     with col_3:
         render_random_generation_options()
 
-    st.markdown("### 🎯 Constraint Grid")
+    st.markdown("### 📊 Constraint Grid")
     st.markdown("Set the number of filled cells required for each row and column. Check cells to mark start and end snake positions.")
 
     # Create constraint grid with visual feedback
@@ -496,53 +496,42 @@ def render_solution_grid():
 def render_sidebar():
     """Render the sidebar with puzzle introduction, instructions and links."""
     with st.sidebar:
-        st.title("🐍 Snake Puzzle Solver")
-        
-        st.markdown("### About Snake Puzzles")
+        st.header("📚 About")
         st.markdown("""
-        **Snake** is a logic puzzle where you must create a single connected path 
-        on a grid according to these rules:
+        **Snake** (also called Tunnel) is a spatial awareness path-finding logic puzzle. 
+        The goal is to connect the snake's head with its tail by filling in grid cells 
+        following these rules:
 
-        🔗 **Single connected path** - The snake forms one continuous line from start to end
+        🔗 **Single connected path** - The snake forms one continuous line from head to tail
         
-        🚫 **No self-touching** - The snake never touches itself orthogonally or diagonally
+        🚫 **No self-touching** - The snake's body never touches itself, not even diagonally
         
-        🔢 **Row/Column constraints** - Each row and column must have a specific number of filled cells
+        🔢 **Row/Column constraints** - Numbers outside the grid tell you how many cells 
+        must be filled in each row and column
         
-        🎯 **Auto endpoints** - Start (closest to top-left) and end (farthest from top-left) are determined automatically
-        """)
+        🧭 **Movement rules** - The snake's body can only be filled horizontally and vertically
         
-        st.markdown("### How to Use")
-        st.markdown("""
-        1. **Set grid size** and adjust row/column constraints
-        2. **Check cells** to mark potential snake positions (start/end auto-calculated)
-        3. **Click 'Solve Puzzle'** to find the solution
-        4. **Or generate random puzzles** to practice
-        """)
         
-        st.markdown("### Tips")
-        st.markdown("""
-        💡 **Row and column totals must match** - This ensures the puzzle is solvable
-        
-        🐍 **Start position** = checked cell closest to top-left corner (0,0)
-        
-        🎯 **End position** = checked cell farthest from top-left corner
-        
-        ⚠️ **Need at least 2 checked cells** for valid start/end positions
-        
-        🎲 **Use random generation** to learn puzzle patterns
+        This app uses the **[snake-mip-solver](https://github.com/DenHvideDvaerg/snake-mip-solver)** package, which uses Mixed Integer Programming (MIP) to solve the puzzle.
         """)
         
         st.markdown("---")
-        st.markdown("### Links")
-        st.markdown("""
-        📦 [snake-mip-solver](https://github.com/DenHvideDvaerg/snake-mip-solver) - The solver library
         
-        🧩 [More Snake Puzzles](https://gridpuzzle.com/snake) - Practice online
-        """)
+        st.header("🎮 How to Use")
+        st.markdown("""
+        1. **Generate a random puzzle** with variable fill percentage
+        2. **Or manually adjust** grid size and row/column constraints
+        3. **Select exactly 2 cells** to mark start and end positions
+        4. **Click 'Solve Puzzle'** to find the solution
+        """) 
         
         st.markdown("---")
-        st.markdown("*Built with Streamlit & OR-Tools*")
+        
+        st.header("🔗 Useful Links")
+        st.markdown("""
+        - 🔧 **[Solver](https://github.com/DenHvideDvaerg/snake-mip-solver)** - The solver powering this app
+        - 🌐 **[Snake Puzzles Online](https://gridpuzzle.com/snake)** - Play more puzzles in your browser
+        """)
 
 
 def render_visualization():
