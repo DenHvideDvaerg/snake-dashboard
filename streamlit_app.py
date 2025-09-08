@@ -150,18 +150,11 @@ def render_puzzle_editor():
 
     # Validate exactly 2 selected cells for proper start/end positioning
     if len(checked_cells) == 2:
-        # Start: cell closest to (0,0) - minimum Manhattan distance
-        start_cell = min(checked_cells, key=lambda pos: pos[0] + pos[1])
-        # End: cell farthest from (0,0) - maximum Manhattan distance  
-        end_cell = max(checked_cells, key=lambda pos: pos[0] + pos[1])
+        start_cell = checked_cells[0]
+        end_cell = checked_cells[1]
         st.session_state.start_cell = start_cell
         st.session_state.end_cell = end_cell
         st.success(f"✅ Start: {start_cell}, End: {end_cell}")
-
-        
-        if st.button("🔧 Solve Puzzle", type="primary"):
-            create_and_solve_puzzle()
-
     else:
         st.error(f"❌ {len(checked_cells)} cells selected. Please select exactly 2 cells for start and end positions.")
         st.session_state.start_cell = None
@@ -574,20 +567,24 @@ def render_summary():
             # Calculate total expected filled cells
             total_expected = sum(s for s in puzzle.row_sums if s is not None)
             st.write(f"**Expected filled cells:** {total_expected}")
-        
-        # Solution statistics (if solution exists)
-        if "current_solution" in st.session_state and st.session_state.current_solution:
-            solution = st.session_state.current_solution
-            st.markdown("**📊 Solution Statistics:**")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Filled Cells", len(solution))
-            with col2:
-                is_valid = puzzle.is_valid_solution(solution)
-                st.metric("Valid Solution", "✅ Yes" if is_valid else "❌ No")
     else:
         st.info("No puzzle loaded yet.")
+
+
+def render_solution_statistics():
+    """Render solution statistics if available."""
+    if "current_puzzle" in st.session_state and "current_solution" in st.session_state and st.session_state.current_solution:
+        puzzle = st.session_state.current_puzzle
+        solution = st.session_state.current_solution
+        
+        st.markdown("**📊 Solution Statistics:**")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Filled Cells", len(solution))
+        with col2:
+            is_valid = puzzle.is_valid_solution(solution)
+            st.metric("Valid Solution", "✅ Yes" if is_valid else "❌ No")
   
   
 
@@ -602,15 +599,18 @@ def main():
     # Render sidebar
     render_sidebar()
     
-    render_puzzle_editor()
+    col_input, col_visualization = st.columns([2, 1])
+
+    with col_input:
+        render_puzzle_editor()
     
-    col_visualization, col_summary = st.columns([1, 1])
-
     with col_visualization:
-        render_visualization()
-
-    with col_summary:
         render_summary()
+        if st.button("🔧 Solve Puzzle", type="primary"):
+            create_and_solve_puzzle()
+        render_visualization()
+        render_solution_statistics()
+
 
 
 if __name__ == "__main__":
