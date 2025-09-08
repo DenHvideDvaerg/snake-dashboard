@@ -4,6 +4,7 @@ Streamlit app for creating and solving Snake puzzles.
 
 import streamlit as st
 from snake_mip_solver import SnakePuzzle, SnakeSolver, SnakePuzzleGenerator
+import time
 
 # Configure Streamlit page
 st.set_page_config(
@@ -60,16 +61,7 @@ def render_puzzle_editor():
         st.rerun()
 
     with col_3:
-        # col1, col2 = st.columns(2)
-        # with col1: 
         render_random_generation_options()
-        # with col2: 
-        #     if st.button("🗑️ Clear Puzzle", type="secondary"):
-        #         st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)] 
-        #                                         for _ in range(st.session_state.num_rows)]
-        #         st.session_state.row_sums = [None] * st.session_state.num_rows
-        #         st.session_state.col_sums = [None] * st.session_state.num_cols
-        #         st.rerun()
 
     st.markdown("### 🎯 Constraint Grid")
     st.markdown("Set the number of filled cells required for each row and column. Check cells to mark start and end snake positions.")
@@ -189,14 +181,23 @@ def create_and_solve_puzzle():
         
         with st.spinner("🔍 Solving puzzle..."):
             solver = SnakeSolver(puzzle)
+            
+            # Start timing
+            start_time = time.time()
             solution = solver.solve(verbose=True)
+            end_time = time.time()
+            
+            # Calculate solve time
+            solve_time = end_time - start_time
+            st.session_state.solve_time = solve_time
             
         if solution:
             st.session_state.current_solution = solution
-            st.toast(f"✅ Solution found with {len(solution)} filled cells!")
+            st.toast(f"✅ Solution found with {len(solution)} filled cells in {solve_time:.2f}s!")
         else:
             st.toast("❌ No solution found for this puzzle configuration.")
             st.session_state.current_solution = None
+            st.session_state.solve_time = None
             
     except Exception as e:
         st.error(f"Error creating/solving puzzle: {str(e)}")
@@ -214,10 +215,10 @@ def render_random_generation_options():
         fill_percentage = st.slider(
             "Fill Percentage",
             min_value=0.05,
-            max_value=0.6,
+            max_value=0.55,
             value=0.4,
             step=0.05,
-            help="Percentage of cells to fill in the generated puzzle (0.05 = 5%, 0.6 = 60%)"
+            help="Percentage of cells to fill in the generated puzzle (0.05 = 5%, 0.55 = 55%)"
         )
     
     with col2:
@@ -242,20 +243,19 @@ def generate_random_puzzle(fill_percentage=0.4, random_seed=None):
     """Generate a random puzzle using SnakePuzzleGenerator."""
     try:
         with st.spinner("🎲 Generating random puzzle..."):
-            generator = SnakePuzzleGenerator()
+            generator = SnakePuzzleGenerator(random_seed)
             
-            # Set random seed if provided
-            if random_seed is not None:
-                import random
-                import numpy as np
-                random.seed(random_seed)
-                np.random.seed(random_seed)
-            
+            # Start timing
+            start_time = time.time()
             puzzle, generated_solution = generator.generate(
                 rows=st.session_state.num_rows,
                 cols=st.session_state.num_cols,
                 fill_percentage=fill_percentage
             )
+            end_time = time.time()
+            
+            # Calculate generation time
+            generation_time = end_time - start_time
             
         # Update session state with generated puzzle
         st.session_state.row_sums = puzzle.row_sums
@@ -279,7 +279,14 @@ def generate_random_puzzle(fill_percentage=0.4, random_seed=None):
         
         # Success message with generation info
         seed_info = f" (seed: {random_seed})" if random_seed is not None else ""
-        st.toast(f"✅ Random puzzle generated! Fill: {fill_percentage:.0%}{seed_info}")
+        
+        # Format generation time
+        if generation_time < 1:
+            time_display = f"{generation_time*1000:.0f}ms"
+        else:
+            time_display = f"{generation_time:.2f}s"
+            
+        st.toast(f"✅ Random puzzle generated in {time_display}! Fill: {fill_percentage:.0%}{seed_info}")
         
     except Exception as e:
         st.error(f"Error generating puzzle: {str(e)}")
@@ -586,12 +593,22 @@ def render_solution_statistics():
         
         st.markdown("**📊 Solution Statistics:**")
         
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Filled Cells", len(solution))
         with col2:
             is_valid = puzzle.is_valid_solution(solution)
             st.metric("Valid Solution", "✅ Yes" if is_valid else "❌ No")
+        with col3:
+            solve_time = st.session_state.get("solve_time")
+            if solve_time is not None:
+                if solve_time < 1:
+                    time_display = f"{solve_time*1000:.0f}ms"
+                else:
+                    time_display = f"{solve_time:.2f}s"
+                st.metric("Solve Time", time_display)
+            else:
+                st.metric("Solve Time", "N/A")
   
   
 
