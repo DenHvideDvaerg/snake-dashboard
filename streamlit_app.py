@@ -146,8 +146,12 @@ def render_puzzle_editor():
 
     # Validate exactly 2 selected cells for proper start/end positioning
     if len(checked_cells) == 2:
-        start_cell = checked_cells[0]
-        end_cell = checked_cells[1]
+        # Sort cells by row first, then by column for consistent assignment
+        # Start = first cell (top-left most), End = second cell (bottom-right most)
+        sorted_cells = sorted(checked_cells)  # Sorts by (row, col) tuple naturally
+        start_cell = sorted_cells[0]  # Earlier position (smaller row/col)
+        end_cell = sorted_cells[1]    # Later position (larger row/col)
+        
         st.session_state.start_cell = start_cell
         st.session_state.end_cell = end_cell
         st.success(f"✅ Start: {start_cell}, End: {end_cell}")
@@ -342,24 +346,14 @@ def create_snake_board_html(puzzle=None, solution=None, show_constraints=True):
         font-weight: bold;
         opacity: 1;
     }
-    .snake-grid .start { 
-        background: rgba(0, 255, 0, 0.3);
-        color: #2E8B57;
+    .snake-grid .endpoint { 
+        background: rgba(var(--primary-color-rgb, 255, 75, 75), 0.4);
+        color: currentColor;
         font-weight: bold;
         font-size: 16px;
+        opacity: 1;
     }
-    .snake-grid .end { 
-        background: rgba(255, 0, 0, 0.3);
-        color: #DC143C;
-        font-weight: bold;
-        font-size: 16px;
-    }
-    .snake-grid .constraint-valid {
-        color: #28a745;
-    }
-    .snake-grid .constraint-invalid {
-        color: #dc3545;
-    }
+
     </style>
     """
     
@@ -376,15 +370,7 @@ def create_snake_board_html(puzzle=None, solution=None, show_constraints=True):
             
             # Display constraint (show "−" for None)
             display_value = "−" if col_constraint is None else str(col_constraint)
-            
-            # Check if constraint is satisfied (skip validation for None)
-            if solution and col_constraint is not None:
-                filled_in_col = sum(1 for (r, c) in solution if c == col)
-                is_valid = filled_in_col == col_constraint
-                valid_class = "constraint-valid" if is_valid else "constraint-invalid"
-                html += f'<td class="constraint-cell {valid_class}">{display_value}</td>'
-            else:
-                html += f'<td class="constraint-cell">{display_value}</td>'
+            html += f'<td class="constraint-cell">{display_value}</td>'
         
         html += "</tr>"
     
@@ -398,25 +384,12 @@ def create_snake_board_html(puzzle=None, solution=None, show_constraints=True):
             
             # Display constraint (show "−" for None)
             display_value = "−" if row_constraint is None else str(row_constraint)
-            
-            # Check if constraint is satisfied (skip validation for None)
-            if solution and row_constraint is not None:
-                filled_in_row = sum(1 for (r, c) in solution if r == row)
-                is_valid = filled_in_row == row_constraint
-                valid_class = "constraint-valid" if is_valid else "constraint-invalid"
-                html += f'<td class="constraint-cell {valid_class}">{display_value}</td>'
-            else:
-                html += f'<td class="constraint-cell">{display_value}</td>'
+            html += f'<td class="constraint-cell">{display_value}</td>'
         
         # Grid cells
         for col in range(num_cols):
             classes = []
             cell_content = ""
-            
-            # Determine cell state
-            is_filled = False
-            is_start = False
-            is_end = False
             
             # Get start and end cells from puzzle or session state
             start_cell = None
@@ -428,28 +401,19 @@ def create_snake_board_html(puzzle=None, solution=None, show_constraints=True):
                 start_cell = st.session_state.start_cell
                 end_cell = st.session_state.end_cell
             
-            # First check if this is start or end position (always show when available)
+            # Check cell state and assign content + classes
             if start_cell and (row, col) == start_cell:
-                is_start = True
-                cell_content = "🐍"
+                cell_content = "■"  # Square for endpoint
+                classes.append("endpoint")
             elif end_cell and (row, col) == end_cell:
-                is_end = True  
-                cell_content = "🎯"
+                cell_content = "■"  # Same square for endpoint
+                classes.append("endpoint")
             elif solution and (row, col) in solution:
                 # Regular filled cell (not start/end)
-                is_filled = True
-                cell_content = "●"
-            else:
-                cell_content = "·"
-            
-            # Apply styling classes
-            if is_start:
-                classes.append("start")
-            elif is_end:
-                classes.append("end")
-            elif is_filled:
+                cell_content = "●"  # Circle for body segments
                 classes.append("filled")
             else:
+                cell_content = "·"
                 classes.append("empty")
             
             class_attr = f' class="{" ".join(classes)}"' if classes else ""
