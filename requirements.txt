@@ -1,2 +1,2 @@
-streamlit
+streamlit==1.53.1
 snake-mip-solver
