@@ -22,6 +22,8 @@ def initialize_session_state():
         st.session_state.row_sums = [None] * st.session_state.num_rows
     if "col_sums" not in st.session_state:
         st.session_state.col_sums = [None] * st.session_state.num_cols
+    if "puzzle_generation_id" not in st.session_state:
+        st.session_state.puzzle_generation_id = 0
     if "puzzle_grid" not in st.session_state:
         # Initialize with a random puzzle
         generate_random_puzzle()
@@ -61,6 +63,8 @@ def render_puzzle_editor():
             st.session_state.row_sums = [None] * new_rows
             st.session_state.col_sums = [None] * new_cols
             st.session_state.puzzle_grid = [[False for _ in range(new_cols)] for _ in range(new_rows)]
+            # Increment generation ID to force constraint widget refresh
+            st.session_state.puzzle_generation_id += 1
             st.rerun()
 
     with col_generator:
@@ -92,11 +96,11 @@ def render_puzzle_editor():
                 f"C{col}",
                 options=options,
                 index=index,
-                key=f"col_sum_{col}",
+                key=f"col_sum_{col}_{st.session_state.puzzle_generation_id}",
                 help=f"Required filled cells in column {col} (None = unconstrained)"
             )
             
-            # Convert back to None or int
+            # Update session state from widget value
             st.session_state.col_sums[col] = None if selected == "None" else selected
 
     # Grid rows with row constraints and cells
@@ -119,17 +123,17 @@ def render_puzzle_editor():
                 f"R{row}",
                 options=options,
                 index=index,
-                key=f"row_sum_{row}",
+                key=f"row_sum_{row}_{st.session_state.puzzle_generation_id}",
                 help=f"Required filled cells in row {row} (None = unconstrained)"
             )
             
-            # Convert back to None or int
+            # Update session state from widget value
             st.session_state.row_sums[row] = None if selected == "None" else selected
         
         # Grid cells
         for col in range(num_cols):
             with row_cols[col + 1]:
-                cell_key = f"grid_cell_{row}_{col}"
+                cell_key = f"grid_cell_{row}_{col}_{st.session_state.puzzle_generation_id}"
                 label = f"dummy_{row}_{col}"
                 # Regular cell - checkbox for start/end
                 st.session_state.puzzle_grid[row][col] = st.checkbox(
@@ -161,10 +165,12 @@ def render_puzzle_editor():
         st.session_state.end_cell = None
 
     if st.button("🗑️ Clear Puzzle", type="secondary"):
-        st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)] 
+        st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)]
                                         for _ in range(st.session_state.num_rows)]
         st.session_state.row_sums = [None] * st.session_state.num_rows
         st.session_state.col_sums = [None] * st.session_state.num_cols
+        # Increment generation ID to force constraint widget refresh
+        st.session_state.puzzle_generation_id += 1
         st.rerun()
     
     
@@ -269,7 +275,7 @@ def generate_random_puzzle(fill_percentage=0.4, random_seed=None):
         st.session_state.col_sums = puzzle.col_sums
         
         # Clear the puzzle grid first
-        st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)] 
+        st.session_state.puzzle_grid = [[False for _ in range(st.session_state.num_cols)]
                                        for _ in range(st.session_state.num_rows)]
         
         
@@ -283,6 +289,9 @@ def generate_random_puzzle(fill_percentage=0.4, random_seed=None):
         # Store the puzzle and solution
         st.session_state.current_puzzle = puzzle
         st.session_state.current_solution = None  # Clear solution until solved
+        
+        # Increment generation ID to force constraint widget refresh
+        st.session_state.puzzle_generation_id += 1
         
         # Success message with generation info
         seed_info = f" (seed: {random_seed})" if random_seed is not None else ""
